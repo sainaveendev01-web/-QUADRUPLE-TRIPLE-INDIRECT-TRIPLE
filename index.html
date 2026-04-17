@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Quadruple / Triple | Sai Naveen</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Raleway:wght@800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#111827;color:#d1d5db;font-family:'JetBrains Mono',monospace;min-height:100vh}
+header{background:#1f2937;border-bottom:3px solid #f59e0b;padding:16px 30px;display:flex;justify-content:space-between;align-items:center}
+header h1{font-family:'Raleway',sans-serif;font-size:1.2rem;color:#f59e0b;letter-spacing:2px}
+header span{font-size:.72rem;color:#6b7280}
+.container{max-width:1000px;margin:30px auto;padding:0 18px}
+.panel{background:#1f2937;border:1px solid #374151;border-radius:10px;padding:24px;margin-bottom:20px;border-left:4px solid #f59e0b}
+.panel h2{font-family:'Raleway',sans-serif;font-size:.95rem;color:#f59e0b;margin-bottom:14px;text-transform:uppercase}
+label{font-size:.72rem;color:#9ca3af;display:block;margin-bottom:5px;letter-spacing:.8px}
+input,textarea{width:100%;background:#111827;border:1px solid #374151;color:#f59e0b;padding:10px 14px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:.9rem;outline:none;resize:vertical}
+input:focus,textarea:focus{border-color:#f59e0b;box-shadow:0 0 8px rgba(245,158,11,.2)}
+.btns{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+button{padding:9px 20px;border:none;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:.8rem;cursor:pointer;transition:all .2s;letter-spacing:.5px}
+.bpri{background:#f59e0b;color:#111827;font-weight:700}
+.bpri:hover{background:#d97706;box-shadow:0 0 14px rgba(245,158,11,.4)}
+.bsec{background:transparent;color:#6b7280;border:1px solid #4b5563}
+.bsec:hover{border-color:#f59e0b;color:#f59e0b}
+.tabs{display:flex;gap:0;margin-bottom:0;border-bottom:2px solid #374151}
+.tab{padding:8px 20px;font-size:.78rem;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;color:#6b7280;transition:all .2s}
+.tab.active{border-bottom-color:#f59e0b;color:#f59e0b}
+.tab-content{display:none;padding-top:16px}
+.tab-content.active{display:block}
+table{width:100%;border-collapse:collapse;font-size:.78rem}
+th{background:#111827;color:#f59e0b;padding:8px 12px;text-align:left;border-bottom:2px solid #374151}
+td{padding:7px 12px;border-bottom:1px solid #2d3748;color:#9ca3af}
+td:first-child{color:#60a5fa}
+tr:hover td{background:#1a2332}
+.err{color:#ef4444;font-size:.78rem;margin-top:6px}
+footer{text-align:center;padding:16px;color:#374151;font-size:.7rem}
+</style>
+</head>
+<body>
+<header>
+  <h1>◈ QUADRUPLE / TRIPLE / INDIRECT TRIPLE</h1>
+  <span>Sai Naveen | RA2311003050059</span>
+</header>
+<div class="container">
+  <div class="panel">
+    <h2>Input Assignment Expression</h2>
+    <label>EXPRESSION (e.g. a = b + c * d - e)</label>
+    <input type="text" id="expr" value="a = b + c * d - e" placeholder="a = b + c * d - e"/>
+    <div class="btns">
+      <button class="bpri" onclick="generate()">⚙ GENERATE</button>
+      <button class="bsec" onclick="reset()">✕ RESET</button>
+    </div>
+    <div id="err" class="err"></div>
+  </div>
+  <div class="panel">
+    <h2>Intermediate Representations</h2>
+    <div class="tabs">
+      <div class="tab active" onclick="showTab('quad')">Quadruple</div>
+      <div class="tab" onclick="showTab('triple')">Triple</div>
+      <div class="tab" onclick="showTab('indirect')">Indirect Triple</div>
+    </div>
+    <div class="tab-content active" id="tab-quad"><div id="quadOut"></div></div>
+    <div class="tab-content" id="tab-triple"><div id="tripleOut"></div></div>
+    <div class="tab-content" id="tab-indirect"><div id="indirectOut"></div></div>
+  </div>
+</div>
+<footer>COMPILER DESIGN LAB | SAI NAVEEN | RA2311003050059</footer>
+<script>
+const prec={'+':1,'-':1,'*':2,'/':2,'^':3},rA={'^':true};
+function isOp(c){return c in prec}
+function tokenize(e){
+  e=e.replace(/\s+/g,'');const t=[];
+  for(let i=0;i<e.length;i++){
+    let c=e[i];if(/[a-zA-Z0-9_]/.test(c)){let w=c;while(i+1<e.length&&/[a-zA-Z0-9_]/.test(e[i+1]))w+=e[++i];t.push(w);}else t.push(c);
+  }return t;
+}
+function toPostfix(tokens){
+  const stk=[],out=[];
+  for(const t of tokens){
+    if(t==='(')stk.push(t);
+    else if(t===')'){while(stk.length&&stk[stk.length-1]!=='(')out.push(stk.pop());stk.pop();}
+    else if(isOp(t)){
+      while(stk.length&&stk[stk.length-1]!=='('&&isOp(stk[stk.length-1])&&(rA[t]?prec[stk[stk.length-1]]>prec[t]:prec[stk[stk.length-1]]>=prec[t]))out.push(stk.pop());
+      stk.push(t);
+    }else out.push(t);
+  }
+  while(stk.length)out.push(stk.pop());
+  return out;
+}
+function genTAC(postfix,result){
+  const stk=[],quads=[],triples=[];let tmp=0;
+  function newTmp(){return 't'+(++tmp);}
+  for(const tok of postfix){
+    if(isOp(tok)){
+      const b=stk.pop(),a=stk.pop();
+      const t=newTmp();
+      quads.push({op:tok,arg1:a,arg2:b,result:t});
+      triples.push({op:tok,arg1:a,arg2:b});
+      stk.push(t);
+    }else stk.push(tok);
+  }
+  const last=stk.pop();
+  quads.push({op:'=',arg1:last,arg2:'',result:result});
+  triples.push({op:'=',arg1:last,arg2:''});
+  return{quads,triples};
+}
+function generate(){
+  const raw=document.getElementById('expr').value.trim();
+  document.getElementById('err').textContent='';
+  const m=raw.match(/^([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*(.+)$/);
+  if(!m){document.getElementById('err').textContent='Use format: var = expression';return;}
+  const[,lhs,rhs]=m;
+  try{
+    const tok=tokenize(rhs),pf=toPostfix(tok);
+    const{quads,triples}=genTAC(pf,lhs);
+    renderQuad(quads);
+    renderTriple(triples);
+    renderIndirect(triples);
+  }catch(e){document.getElementById('err').textContent='Error: '+e.message;}
+}
+function renderQuad(q){
+  let h=`<table><thead><tr><th>#</th><th>OP</th><th>ARG1</th><th>ARG2</th><th>RESULT</th></tr></thead><tbody>`;
+  q.forEach((r,i)=>h+=`<tr><td>(${i})</td><td>${r.op}</td><td>${r.arg1}</td><td>${r.arg2||'—'}</td><td style="color:#34d399">${r.result}</td></tr>`);
+  document.getElementById('quadOut').innerHTML=h+'</tbody></table>';
+}
+function renderTriple(t){
+  let h=`<table><thead><tr><th>#</th><th>OP</th><th>ARG1</th><th>ARG2</th></tr></thead><tbody>`;
+  t.forEach((r,i)=>h+=`<tr><td>(${i})</td><td style="color:#f59e0b">${r.op}</td><td>${typeof r.arg1==='number'?'('+r.arg1+')':r.arg1}</td><td>${r.arg2||'—'}</td></tr>`);
+  document.getElementById('tripleOut').innerHTML=h+'</tbody></table>';
+}
+function renderIndirect(t){
+  let ih=`<table><thead><tr><th>INDEX</th><th>POINTER</th></tr></thead><tbody>`;
+  t.forEach((_,i)=>ih+=`<tr><td>[${i}]</td><td style="color:#a78bfa">→ (${i})</td></tr>`);
+  ih+='</tbody></table>';
+  let th=`<table style="margin-top:12px"><thead><tr><th>#</th><th>OP</th><th>ARG1</th><th>ARG2</th></tr></thead><tbody>`;
+  t.forEach((r,i)=>th+=`<tr><td>(${i})</td><td style="color:#f59e0b">${r.op}</td><td>${typeof r.arg1==='number'?'('+r.arg1+')':r.arg1}</td><td>${r.arg2||'—'}</td></tr>`);
+  document.getElementById('indirectOut').innerHTML='<p style="font-size:.72rem;color:#6b7280;margin-bottom:8px">INDEX TABLE</p>'+ih+'<p style="font-size:.72rem;color:#6b7280;margin:14px 0 8px">TRIPLE TABLE</p>'+th+'</tbody></table>';
+}
+function showTab(name){
+  document.querySelectorAll('.tab').forEach((t,i)=>{const names=['quad','triple','indirect'];t.classList.toggle('active',names[i]===name)});
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+}
+function reset(){
+  document.getElementById('expr').value='';
+  ['quadOut','tripleOut','indirectOut'].forEach(id=>document.getElementById(id).innerHTML='');
+}
+generate();
+</script>
+</body>
+</html>
